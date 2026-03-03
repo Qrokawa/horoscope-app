@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>精密ホロスコープ鑑定 - 世界最高峰の天体解析</title>
+    <meta name="description" content="NASA JPL精度の天文計算による本格ホロスコープ。ネイタルチャート、トランジット、相性診断、運勢予測を完全網羅。">
+
+    <!-- OGP -->
+    <meta property="og:title" content="精密ホロスコープ鑑定 - 世界最高峰の天体解析">
+    <meta property="og:description" content="NASA JPL精度の天文計算に基づく本格ホロスコープ鑑定。あなたの星の配置を精密に読み解きます。">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="img/ogp.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-PXC24EY9BP"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-PXC24EY9BP');
+    </script>
+</head>
+<body>
+    <!-- 星空背景 -->
+    <div id="star-field" class="star-field"></div>
+
+    <!-- ===== Screen 1: 入力画面 ===== -->
+    <div id="screen-intro" class="screen">
+        <div class="container">
+            <header class="hero">
+                <h1 class="hero-title">精密ホロスコープ鑑定</h1>
+                <p class="hero-subtitle">NASA JPL精度の天文計算で、あなたの星の配置を解き明かす</p>
+                <div class="section-divider"></div>
+            </header>
+
+            <div class="glass-card form-card">
+                <h2 class="form-title">出生データを入力</h2>
+                <p class="form-desc">正確な出生時刻をご存知の場合、より精密なハウスとアセンダントの鑑定が可能です。</p>
+
+                <form id="birth-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="birth-year">生まれ年</label>
+                            <select id="birth-year" required>
+                                <option value="">年</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="birth-month">月</label>
+                            <select id="birth-month" required>
+                                <option value="">月</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="birth-day">日</label>
+                            <select id="birth-day" required>
+                                <option value="">日</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="birth-hour">出生時刻</label>
+                            <select id="birth-hour">
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="birth-minute">分</label>
+                            <select id="birth-minute">
+                                <option value="0">00分</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>出生地の地域</label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="region" value="japan" checked> 日本
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="region" value="world"> 海外
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="birth-location">出生地</label>
+                        <select id="birth-location" required>
+                            <option value="">選択してください</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn-primary btn-large">
+                        ホロスコープを鑑定する
+                    </button>
+                </form>
+            </div>
+
+            <div class="feature-grid">
+                <div class="feature-item glass-card">
+                    <div class="feature-icon">&#x2609;</div>
+                    <h3>ネイタルチャート</h3>
+                    <p>10天体の精密な位置計算とプラシーダスハウスシステム</p>
+                </div>
+                <div class="feature-item glass-card">
+                    <div class="feature-icon">&#x25B3;</div>
+                    <h3>アスペクト解析</h3>
+                    <p>メジャー5種＋マイナー4種の天体間角度関係を完全分析</p>
+                </div>
+                <div class="feature-item glass-card">
+                    <div class="feature-icon">&#x2605;</div>
+                    <h3>今日の運勢</h3>
+                    <p>トランジット天体とネイタルの関係から運勢を予測</p>
+                </div>
+                <div class="feature-item glass-card">
+                    <div class="feature-icon">&#x2661;</div>
+                    <h3>相性診断</h3>
+                    <p>シナストリー法による2人の天体間相性を徹底分析</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Screen 2: ローディング ===== -->
+    <div id="screen-loading" class="screen">
+        <div class="loading-wrapper">
+            <div class="loading-circle">
+                <div class="loading-ring ring-1"></div>
+                <div class="loading-ring ring-2"></div>
+                <div class="loading-ring ring-3"></div>
+                <div class="loading-symbol">&#x2609;</div>
+            </div>
+            <p id="loading-message" class="loading-text">天体の位置を計算中...</p>
+        </div>
+    </div>
+
+    <!-- ===== Screen 3: 結果画面 ===== -->
+    <div id="screen-result" class="screen">
+        <div class="container">
+            <header class="result-header">
+                <h1 class="result-title">あなたのホロスコープ</h1>
+                <div class="section-divider"></div>
+            </header>
+
+            <!-- SVGチャート -->
+            <div class="chart-wrapper">
+                <div id="chart-container" class="chart-container"></div>
+            </div>
+
+            <!-- タブナビゲーション -->
+            <div class="tab-nav">
+                <button class="active" data-tab="tab-planets">天体配置</button>
+                <button data-tab="tab-houses">ハウス</button>
+                <button data-tab="tab-aspects">アスペクト</button>
+                <button data-tab="tab-interpretation">鑑定結果</button>
+            </div>
+
+            <div class="tab-container">
+                <!-- 天体配置タブ -->
+                <div id="tab-planets" class="tab-content active">
+                    <div class="glass-card">
+                        <h3>天体配置一覧</h3>
+                        <table class="planet-table">
+                            <thead>
+                                <tr>
+                                    <th>天体</th>
+                                    <th>星座・度数</th>
+                                    <th>ハウス</th>
+                                    <th>状態</th>
+                                </tr>
+                            </thead>
+                            <tbody id="planet-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ハウスタブ -->
+                <div id="tab-houses" class="tab-content">
+                    <div class="glass-card">
+                        <h3>ハウスカスプ一覧</h3>
+                        <table class="planet-table">
+                            <thead>
+                                <tr>
+                                    <th>ハウス</th>
+                                    <th>星座・度数</th>
+                                    <th>テーマ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="house-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- アスペクトタブ -->
+                <div id="tab-aspects" class="tab-content">
+                    <div class="glass-card">
+                        <h3>主要アスペクト</h3>
+                        <div id="aspect-list"></div>
+                    </div>
+                </div>
+
+                <!-- 鑑定結果タブ -->
+                <div id="tab-interpretation" class="tab-content">
+                    <div id="interpretation-content"></div>
+                </div>
+            </div>
+
+            <!-- アクションボタン -->
+            <div class="action-buttons">
+                <button class="btn-primary" onclick="goToTransit()">
+                    今日の運勢を見る
+                </button>
+                <button class="btn-secondary" onclick="goToSynastry()">
+                    相性診断をする
+                </button>
+                <button class="btn-secondary" onclick="goToRegistration()">
+                    完全版をメールで受け取る
+                </button>
+                <button class="btn-outline" onclick="resetDiagnosis()">
+                    もう一度鑑定する
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Screen 4: トランジット・運勢 ===== -->
+    <div id="screen-transit" class="screen">
+        <div class="container">
+            <header class="result-header">
+                <button class="btn-back" onclick="goBackToResult()">&larr; チャートに戻る</button>
+                <h1 class="result-title">今日の運勢</h1>
+                <div class="section-divider"></div>
+            </header>
+
+            <!-- トランジットチャート -->
+            <div class="chart-wrapper">
+                <div id="transit-chart-container" class="chart-container"></div>
+                <p class="chart-caption">外側のリング: 現在のトランジット天体</p>
+            </div>
+
+            <!-- 運勢コンテンツ -->
+            <div id="fortune-content"></div>
+
+            <div class="action-buttons">
+                <button class="btn-secondary" onclick="goBackToResult()">チャートに戻る</button>
+                <button class="btn-secondary" onclick="goToSynastry()">相性診断をする</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Screen 5: 相性診断 ===== -->
+    <div id="screen-synastry" class="screen">
+        <div class="container">
+            <header class="result-header">
+                <button class="btn-back" onclick="goBackToResult()">&larr; チャートに戻る</button>
+                <h1 class="result-title">相性診断（シナストリー）</h1>
+                <div class="section-divider"></div>
+            </header>
+
+            <div class="glass-card form-card">
+                <h2 class="form-title">お相手の出生データ</h2>
+                <form id="synastry-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="syn-year">生まれ年</label>
+                            <select id="syn-year" required><option value="">年</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="syn-month">月</label>
+                            <select id="syn-month" required>
+                                <option value="">月</option>
+                                <option value="1">1月</option><option value="2">2月</option>
+                                <option value="3">3月</option><option value="4">4月</option>
+                                <option value="5">5月</option><option value="6">6月</option>
+                                <option value="7">7月</option><option value="8">8月</option>
+                                <option value="9">9月</option><option value="10">10月</option>
+                                <option value="11">11月</option><option value="12">12月</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="syn-day">日</label>
+                            <select id="syn-day" required>
+                                <option value="">日</option>
+                                <script>for(var i=1;i<=31;i++){document.write('<option value="'+i+'">'+i+'日</option>')}</script>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="syn-hour">出生時刻</label>
+                            <select id="syn-hour">
+                                <option value="12">不明（12:00）</option>
+                                <script>for(var i=0;i<=23;i++){document.write('<option value="'+i+'">'+String(i).padStart(2,'0')+':00</option>')}</script>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="syn-minute">分</label>
+                            <select id="syn-minute">
+                                <script>for(var i=0;i<60;i+=5){document.write('<option value="'+i+'">'+String(i).padStart(2,'0')+'分</option>')}</script>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="syn-location">出生地</label>
+                        <select id="syn-location" required><option value="">選択してください</option></select>
+                    </div>
+                    <button type="submit" class="btn-primary">相性を診断する</button>
+                </form>
+            </div>
+
+            <!-- 相性結果 -->
+            <div id="synastry-result"></div>
+
+            <div class="action-buttons">
+                <button class="btn-secondary" onclick="goBackToResult()">チャートに戻る</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Screen 6: メール登録 ===== -->
+    <div id="screen-registration" class="screen">
+        <div class="container">
+            <header class="result-header">
+                <button class="btn-back" onclick="goBackToResult()">&larr; チャートに戻る</button>
+                <h1 class="result-title">完全版ホロスコープ鑑定書</h1>
+                <div class="section-divider"></div>
+            </header>
+
+            <div class="glass-card form-card registration-card">
+                <div class="reg-icon">&#x2728;</div>
+                <h2 class="form-title">無料で完全版をお届け</h2>
+                <p class="form-desc">メールアドレスをご登録いただくと、あなた専用の完全版ホロスコープ鑑定書をお届けします。</p>
+                <ul class="reg-benefits">
+                    <li>全10天体の詳細な解釈</li>
+                    <li>12ハウスの完全分析</li>
+                    <li>主要アスペクトの詳細レポート</li>
+                    <li>毎月の運勢メール配信</li>
+                </ul>
+
+                <form id="registration-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="reg-lastname">姓</label>
+                            <input type="text" id="reg-lastname" placeholder="山田" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="reg-firstname">名</label>
+                            <input type="text" id="reg-firstname" placeholder="太郎" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-email">メールアドレス</label>
+                        <input type="email" id="reg-email" placeholder="your@email.com" required>
+                    </div>
+                    <button type="submit" class="btn-primary btn-large">
+                        無料で登録する
+                    </button>
+                    <p class="privacy-note">ご登録いただいた情報は鑑定書の送付にのみ使用いたします。</p>
+                </form>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn-outline" onclick="goBackToResult()">登録せずに戻る</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Scripts ===== -->
+    <!-- Astronomy Engine (NASA JPL) -->
+    <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
+
+    <!-- App modules (dependency order) -->
+    <script src="js/location-data.js"></script>
+    <script src="js/horoscope-data.js"></script>
+    <script src="js/astronomy-engine.js"></script>
+    <script src="js/house-calculator.js"></script>
+    <script src="js/aspect-calculator.js"></script>
+    <script src="js/natal-chart.js"></script>
+    <script src="js/transit-calculator.js"></script>
+    <script src="js/synastry-engine.js"></script>
+    <script src="js/chart-renderer.js"></script>
+    <script src="js/interpretation-engine.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

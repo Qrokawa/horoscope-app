@@ -1,0 +1,17 @@
+# PHP (不要 - Cloudflare Pages Functionsに移行済み)
+config.php
+submit.php
+
+# ログ
+logs/*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
