@@ -903,6 +903,18 @@ img {
   gap: var(--space-xs);
 }
 
+.planet-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5em;
+  height: 1.5em;
+  font-size: 1rem;
+  font-family: 'Noto Serif JP', serif;
+  text-align: center;
+  vertical-align: middle;
+}
+
 .planet-table .degree {
   font-variant-numeric: tabular-nums;
   color: var(--text-muted);

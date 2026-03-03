@@ -1,11 +1,11 @@
 /**
  * トランジット計算エンジン
  * 現在の天体位置を計算し、ネイタルチャートとのトランジットアスペクトを検出
- * 運勢予測ロジック
+ * 運勢予測ロジック（Swiss Ephemeris版）
  */
 class TransitCalculator {
-    constructor() {
-        this.astro = new AstronomyCalculator();
+    constructor(sweEngine) {
+        this.astro = sweEngine;
         this.aspectCalc = new AspectCalculator();
     }
 
@@ -14,14 +14,16 @@ class TransitCalculator {
      */
     calculateCurrentTransits() {
         const now = new Date();
-        return this.astro.calculateAllPositions(now);
+        const jd = this.astro.dateToJulianDay(now);
+        return this.astro.calculateAllPositions(jd);
     }
 
     /**
      * 特定日時のトランジットを計算
      */
     calculateTransitsForDate(date) {
-        return this.astro.calculateAllPositions(date);
+        const jd = this.astro.dateToJulianDay(date);
+        return this.astro.calculateAllPositions(jd);
     }
 
     /**
@@ -173,50 +175,35 @@ class TransitCalculator {
             const boost = aspect.harmony === 'harmonious' ? 1 : -1;
             const strength = aspect.orbFactor * 5;
 
-            // 恋愛運
             if (['Venus', 'Mars'].includes(aspect.transitPlanet) ||
                 ['Venus', 'Mars', 'Moon'].includes(aspect.natalTarget)) {
                 scores.love += boost * strength * 2;
             }
-
-            // 仕事運
             if (['Saturn', 'Jupiter', 'Sun'].includes(aspect.transitPlanet) ||
                 ['Sun', 'Midheaven', 'Saturn'].includes(aspect.natalTarget)) {
                 scores.career += boost * strength * 2;
             }
-
-            // 健康運
             if (['Mars', 'Sun'].includes(aspect.transitPlanet) ||
                 ['Mars', 'Ascendant'].includes(aspect.natalTarget)) {
                 scores.health += boost * strength * 2;
             }
-
-            // 総合運
             scores.overall += boost * strength;
         }
 
-        // スコアを0-100に正規化
         for (const key of Object.keys(scores)) {
             scores[key] = Math.max(0, Math.min(100, Math.round(scores[key])));
         }
 
-        // 星5段階に変換
         const toStars = (score) => Math.max(1, Math.min(5, Math.round(score / 20)));
 
-        // ラッキーカラー（月の星座に基づく）
         const luckyColors = {
             '牡羊座': '赤', '牡牛座': '緑', '双子座': '黄', '蟹座': '銀',
             '獅子座': '金', '乙女座': '紺', '天秤座': 'ピンク', '蠍座': 'ワインレッド',
             '射手座': '紫', '山羊座': 'ブラウン', '水瓶座': 'ターコイズ', '魚座': 'ラベンダー'
         };
 
-        // ラッキーナンバー（月の度数から算出）
         const luckyNumber = moonData ? Math.floor(moonData.degree) % 9 + 1 : 7;
-
-        // 重要なトランジット（上位3つ）
         const keyTransits = transitAspects.slice(0, 3);
-
-        // 運勢メッセージ生成
         const overallMessage = this._generateFortuneMessage(scores, keyTransits, moonSign);
 
         return {
@@ -244,7 +231,6 @@ class TransitCalculator {
     _generateFortuneMessage(scores, keyTransits, moonSign) {
         const parts = [];
 
-        // 総合運
         if (scores.overall >= 70) {
             parts.push('今日は全体的にエネルギーが高く、積極的に行動するのに適した日です。');
         } else if (scores.overall >= 50) {
@@ -253,26 +239,22 @@ class TransitCalculator {
             parts.push('今日は少し慎重に過ごすのが吉。無理をせず、内面を見つめる時間を大切にしてください。');
         }
 
-        // 月の星座
         if (moonSign) {
             parts.push(`月は${moonSign}を運行中。`);
         }
 
-        // 恋愛運
         if (scores.love >= 70) {
             parts.push('恋愛面では魅力が増す時期。積極的なコミュニケーションが吉です。');
         } else if (scores.love < 40) {
             parts.push('恋愛面では相手の気持ちに寄り添うことを意識してみてください。');
         }
 
-        // 仕事運
         if (scores.career >= 70) {
             parts.push('仕事面では新しいチャンスに恵まれるかもしれません。チャレンジ精神を持って。');
         } else if (scores.career < 40) {
             parts.push('仕事面では焦らず着実に進めることが大切です。');
         }
 
-        // 重要トランジット
         if (keyTransits.length > 0) {
             const transit = keyTransits[0];
             parts.push(`${transit.transitPlanetJP}が${transit.natalTargetJP}に${transit.aspectNameJP}を形成中。${transit.interpretation}`);

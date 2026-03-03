@@ -1,11 +1,14 @@
 /**
  * ホロスコープアプリ メインコントローラー
  * 画面遷移、フォーム制御、結果表示の統合管理
+ * Swiss Ephemeris Wasm版
  */
 (function() {
     'use strict';
 
     // ===== グローバル変数 =====
+    let sweEngine = null;
+    let sweReady = false;
     let currentChart = null;
     let currentFortune = null;
     let currentSynastry = null;
@@ -17,14 +20,45 @@
         initTabs();
         initTooltip();
         showScreen('screen-intro');
+
+        // Swiss Ephemeris Wasmをバックグラウンドでプリロード
+        initSwissEphemeris();
     });
+
+    // ===== Swiss Ephemeris 初期化 =====
+    async function initSwissEphemeris() {
+        try {
+            var indicator = document.getElementById('swe-loading-indicator');
+            var statusEl = document.getElementById('swe-status');
+            if (indicator) indicator.style.display = 'block';
+
+            sweEngine = new SweEngine();
+            await sweEngine.init(function(msg) {
+                if (statusEl) statusEl.textContent = msg;
+            });
+            sweReady = true;
+
+            if (indicator) indicator.style.display = 'none';
+
+            // 送信ボタンを有効化
+            var submitBtn = document.querySelector('#birth-form .btn-primary');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'ホロスコープを鑑定する';
+            }
+        } catch (error) {
+            console.error('Swiss Ephemeris initialization failed:', error);
+            var statusEl = document.getElementById('swe-status');
+            if (statusEl) statusEl.textContent = '計算エンジンの読み込みに失敗しました。ページを再読み込みしてください。';
+        }
+    }
 
     // ===== 星空アニメーション =====
     function createStars() {
-        const field = document.getElementById('star-field');
+        var field = document.getElementById('star-field');
         if (!field) return;
-        for (let i = 0; i < 60; i++) {
-            const star = document.createElement('div');
+        for (var i = 0; i < 60; i++) {
+            var star = document.createElement('div');
             star.className = 'star';
             star.style.left = Math.random() * 100 + '%';
             star.style.top = Math.random() * 100 + '%';
@@ -90,10 +124,10 @@
             }
         }
 
-        // 分セレクト
+        // 分セレクト（1分刻み）
         var minuteSelect = document.getElementById('birth-minute');
         if (minuteSelect) {
-            for (var mi = 0; mi < 60; mi += 5) {
+            for (var mi = 0; mi < 60; mi += 1) {
                 var opt = document.createElement('option');
                 opt.value = mi; opt.textContent = String(mi).padStart(2, '0') + '分';
                 minuteSelect.appendChild(opt);
@@ -163,13 +197,11 @@
                 var tabGroup = e.target.closest('.tab-nav');
                 var contentContainer = tabGroup ? tabGroup.nextElementSibling : null;
 
-                // タブボタンのactive切替
                 tabGroup.querySelectorAll('button').forEach(function(btn) {
                     btn.classList.remove('active');
                 });
                 e.target.classList.add('active');
 
-                // コンテンツ切替
                 var targetId = e.target.getAttribute('data-tab');
                 if (contentContainer) {
                     contentContainer.querySelectorAll('.tab-content').forEach(function(tc) {
@@ -210,8 +242,8 @@
         });
     }
 
-    // ===== 診断実行 =====
-    function handleDiagnosis() {
+    // ===== 診断実行（async） =====
+    async function handleDiagnosis() {
         var year = parseInt(document.getElementById('birth-year').value);
         var month = parseInt(document.getElementById('birth-month').value);
         var day = parseInt(document.getElementById('birth-day').value);
@@ -232,38 +264,39 @@
 
         // ローディング画面表示
         showScreen('screen-loading');
-        updateLoadingText('天体の位置を計算中...');
 
-        // 計算を非同期で実行（UI更新のため）
-        setTimeout(function() {
-            updateLoadingText('ハウスシステムを算出中...');
-            setTimeout(function() {
-                updateLoadingText('アスペクトを解析中...');
-                setTimeout(function() {
-                    updateLoadingText('ホロスコープを描画中...');
-                    setTimeout(function() {
-                        try {
-                            var natalChart = new NatalChart();
-                            currentChart = natalChart.calculate(
-                                year, month, day, hour, minute,
-                                location.lat, location.lng, location.tz
-                            );
+        try {
+            // Wasmがまだ初期化されていなければ待機
+            if (!sweReady) {
+                updateLoadingText('天文計算エンジンを準備中...');
+                await sweEngine.init();
+                sweReady = true;
+            }
 
-                            // トランジットも計算
-                            var transitCalc = new TransitCalculator();
-                            currentFortune = transitCalc.generateDailyFortune(currentChart);
+            updateLoadingText('天体の位置を計算中...');
 
-                            displayResults();
-                            showScreen('screen-result');
-                        } catch (error) {
-                            console.error('Calculation error:', error);
-                            alert('計算中にエラーが発生しました。入力データを確認してください。');
-                            showScreen('screen-intro');
-                        }
-                    }, 500);
-                }, 600);
-            }, 500);
-        }, 400);
+            var natalChart = new NatalChart(sweEngine);
+            currentChart = await natalChart.calculate(
+                year, month, day, hour, minute,
+                location.lat, location.lng, location.tz
+            );
+
+            updateLoadingText('トランジットを計算中...');
+            var transitCalc = new TransitCalculator(sweEngine);
+            currentFortune = transitCalc.generateDailyFortune(currentChart);
+
+            updateLoadingText('ホロスコープを描画中...');
+
+            // 少し待ってUI更新
+            await new Promise(function(resolve) { setTimeout(resolve, 300); });
+
+            displayResults();
+            showScreen('screen-result');
+        } catch (error) {
+            console.error('Calculation error:', error);
+            alert('計算中にエラーが発生しました。入力データを確認してください。\n' + error.message);
+            showScreen('screen-intro');
+        }
     }
 
     function updateLoadingText(text) {
@@ -300,7 +333,6 @@
         if (!tbody) return;
         tbody.innerHTML = '';
 
-        var astro = new AstronomyCalculator();
         var planets = currentChart.planets;
         var order = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'];
 
@@ -310,10 +342,10 @@
             var tr = document.createElement('tr');
             if (p.retrograde) tr.classList.add('retrograde');
             tr.innerHTML =
-                '<td>' + p.glyph + ' ' + p.nameJP + '</td>' +
+                '<td><span class="planet-glyph">' + p.glyph + '</span> ' + p.nameJP + '</td>' +
                 '<td>' + p.signJP + ' ' + (p.dms ? p.dms.formatted : '') + '</td>' +
                 '<td>第' + (p.house || '-') + 'ハウス</td>' +
-                '<td>' + (p.retrograde ? '<span class="retrograde-badge">R</span>' : '') + '</td>';
+                '<td>' + (p.retrograde ? '<span class="retrograde-badge">逆行</span>' : '') + '</td>';
             tbody.appendChild(tr);
         });
 
@@ -324,7 +356,7 @@
                 if (!n || !n.success) return;
                 var tr = document.createElement('tr');
                 tr.innerHTML =
-                    '<td>' + n.glyph + ' ' + n.nameJP + '</td>' +
+                    '<td><span class="planet-glyph">' + n.glyph + '</span> ' + n.nameJP + '</td>' +
                     '<td>' + n.signJP + ' ' + (n.dms ? n.dms.formatted : '') + '</td>' +
                     '<td>第' + (n.house || '-') + 'ハウス</td>' +
                     '<td></td>';
@@ -354,9 +386,8 @@
         if (!tbody || !currentChart.houses) return;
         tbody.innerHTML = '';
 
-        var astro = new AstronomyCalculator();
         currentChart.houses.cusps.forEach(function(cusp, i) {
-            var zodiac = astro.eclipticToZodiac(cusp);
+            var zodiac = sweEngine.eclipticToZodiac(cusp);
             var meaning = HouseCalculator.getHouseMeaning(i + 1);
             var tr = document.createElement('tr');
             tr.innerHTML =
@@ -372,15 +403,13 @@
         if (!container || !currentChart.aspects) return;
         container.innerHTML = '';
 
-        var astro = new AstronomyCalculator();
-        var aspectCalc = new AspectCalculator();
         var majors = currentChart.aspects.filter(function(a) { return a.type === 'major'; }).slice(0, 15);
 
         majors.forEach(function(a) {
             var div = document.createElement('div');
             div.className = 'aspect-row aspect-' + a.harmony;
-            var n1 = astro.planetNamesJP[a.planet1] || a.planet1;
-            var n2 = astro.planetNamesJP[a.planet2] || a.planet2;
+            var n1 = sweEngine.planetNamesJP[a.planet1] || a.planet1;
+            var n2 = sweEngine.planetNamesJP[a.planet2] || a.planet2;
             div.innerHTML =
                 '<span class="aspect-planets">' + n1 + ' ' + (a.aspectGlyph || '') + ' ' + n2 + '</span>' +
                 '<span class="aspect-name">' + (a.aspectNameJP || a.aspect) + '</span>' +
@@ -424,7 +453,6 @@
                 html += '<div class="retrograde-notice">この天体は逆行中です。内面への深い探求の時期を示しています。</div>';
             }
 
-            // アスペクトセクション
             if (section.isAspectSection && section.aspectList) {
                 html += '<div class="interp-aspects">';
                 section.aspectList.forEach(function(a) {
@@ -436,12 +464,10 @@
                 html += '</div>';
             }
 
-            // バランスチャート
             if (section.chartData) {
                 html += renderBalanceChart(section.chartData);
             }
 
-            // ランキング
             if (section.ranking) {
                 html += '<div class="planet-ranking">';
                 section.ranking.forEach(function(r, idx) {
@@ -520,8 +546,8 @@
         container.innerHTML = html;
     }
 
-    // ===== 相性診断 =====
-    function handleSynastry() {
+    // ===== 相性診断（async） =====
+    async function handleSynastry() {
         var year = parseInt(document.getElementById('syn-year').value);
         var month = parseInt(document.getElementById('syn-month').value);
         var day = parseInt(document.getElementById('syn-day').value);
@@ -541,7 +567,7 @@
         }
 
         try {
-            var synEngine = new SynastryEngine();
+            var synEngine = new SynastryEngine(sweEngine);
             var person1 = currentChart.birthData;
             var person2 = {
                 year: year, month: month, day: day,
@@ -552,7 +578,7 @@
             person1.longitude = person1.longitude || currentChart.birthData.longitude;
             person1.timezone = person1.timezone || currentChart.birthData.timezone;
 
-            currentSynastry = synEngine.analyze(person1, person2);
+            currentSynastry = await synEngine.analyze(person1, person2);
             displaySynastryResult();
         } catch (error) {
             console.error('Synastry error:', error);
@@ -568,13 +594,11 @@
         var s = currentSynastry;
         var html = '';
 
-        // 総合スコア
         html += '<div class="synastry-score-section glass-card">';
         html += '<div class="synastry-score"><span class="score-number">' + s.overallScore.score + '</span><span class="score-label">/ 100</span></div>';
         html += '<div class="synastry-level">' + s.overallScore.description + '</div>';
         html += '</div>';
 
-        // カテゴリースコア
         html += '<div class="synastry-categories">';
         s.report.forEach(function(section) {
             html += '<div class="synastry-category glass-card">';
@@ -588,12 +612,10 @@
         });
         html += '</div>';
 
-        // バイホイールチャート
         html += '<div id="synastry-chart-container" class="chart-wrapper"></div>';
 
         container.innerHTML = html;
 
-        // シナストリーチャート描画
         var chartContainer = document.getElementById('synastry-chart-container');
         if (chartContainer) {
             var renderer = new ChartRenderer('synastry-chart-container');
@@ -618,18 +640,20 @@
             submitBtn.textContent = '送信中...';
         }
 
-        var sunSign = currentChart && currentChart.planets.Sun ? currentChart.planets.Sun.signJP : '';
-        var moonSign = currentChart && currentChart.planets.Moon ? currentChart.planets.Moon.signJP : '';
-        var ascSign = currentChart && currentChart.houses ? currentChart.houses.ascendantZodiac.signJP : '';
         var bd = currentChart ? currentChart.birthData : {};
+
+        var locationSelect = document.getElementById('birth-location');
+        var pref = '';
+        if (locationSelect && locationSelect.selectedIndex > 0) {
+            pref = locationSelect.options[locationSelect.selectedIndex].textContent;
+        }
 
         var payload = {
             email: email,
             lastName: lastName,
             firstName: firstName,
             birthdate: bd.year + '/' + bd.month + '/' + bd.day,
-            year: bd.year, month: bd.month, day: bd.day,
-            sunSign: sunSign, moonSign: moonSign, ascSign: ascSign
+            pref: pref
         };
 
         fetch('/api/submit', {
@@ -640,7 +664,7 @@
         .then(function(res) { return res.json(); })
         .then(function(data) {
             if (data.success) {
-                alert('ご登録ありがとうございます！完全版の鑑定書をメールでお届けします。');
+                alert('ご登録ありがとうございます！あやのから特別なメッセージをお届けします。');
                 if (submitBtn) {
                     submitBtn.textContent = '登録完了';
                 }
@@ -664,7 +688,6 @@
     window.goToTransit = function() {
         showScreen('screen-transit');
         if (currentChart && currentFortune) {
-            // トランジットチャートオーバーレイ
             var chartContainer = document.getElementById('transit-chart-container');
             if (chartContainer) {
                 var renderer = new ChartRenderer('transit-chart-container');
@@ -676,7 +699,6 @@
 
     window.goToSynastry = function() {
         showScreen('screen-synastry');
-        // 相性診断フォームの出生地セレクトを初期化
         var synLocation = document.getElementById('syn-location');
         if (synLocation && synLocation.options.length <= 1) {
             var locations = window.LOCATION_DATA.japan;
@@ -688,7 +710,6 @@
             });
         }
 
-        // 年セレクト
         var synYear = document.getElementById('syn-year');
         if (synYear && synYear.options.length <= 1) {
             var now = new Date();

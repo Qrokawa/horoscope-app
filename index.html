@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>精密ホロスコープ鑑定 - 世界最高峰の天体解析</title>
-    <meta name="description" content="NASA JPL精度の天文計算による本格ホロスコープ。ネイタルチャート、トランジット、相性診断、運勢予測を完全網羅。">
+    <title>精密ホロスコープ鑑定 - Swiss Ephemeris精度の天体解析</title>
+    <meta name="description" content="Swiss Ephemeris (JPL DE431)精度の天文計算による本格ホロスコープ。ネイタルチャート、トランジット、相性診断、運勢予測を完全網羅。">
 
     <!-- OGP -->
-    <meta property="og:title" content="精密ホロスコープ鑑定 - 世界最高峰の天体解析">
-    <meta property="og:description" content="NASA JPL精度の天文計算に基づく本格ホロスコープ鑑定。あなたの星の配置を精密に読み解きます。">
+    <meta property="og:title" content="精密ホロスコープ鑑定 - Swiss Ephemeris精度の天体解析">
+    <meta property="og:description" content="Swiss Ephemeris精度の天文計算に基づく本格ホロスコープ鑑定。あなたの星の配置を精密に読み解きます。">
     <meta property="og:type" content="website">
     <meta property="og:image" content="img/ogp.jpg">
     <meta name="twitter:card" content="summary_large_image">
@@ -39,9 +39,14 @@
         <div class="container">
             <header class="hero">
                 <h1 class="hero-title">精密ホロスコープ鑑定</h1>
-                <p class="hero-subtitle">NASA JPL精度の天文計算で、あなたの星の配置を解き明かす</p>
+                <p class="hero-subtitle">Swiss Ephemeris精度の天文計算で、あなたの星の配置を解き明かす</p>
                 <div class="section-divider"></div>
             </header>
+
+            <!-- Swiss Ephemeris Wasm読み込みインジケーター -->
+            <div id="swe-loading-indicator" style="text-align:center; padding: 8px 0; font-size: 0.85em; color: rgba(255,255,255,0.6); display: none;">
+                <span id="swe-status">天文計算エンジンを準備中...</span>
+            </div>
 
             <div class="glass-card form-card">
                 <h2 class="form-title">出生データを入力</h2>
@@ -78,7 +83,6 @@
                         <div class="form-group">
                             <label for="birth-minute">分</label>
                             <select id="birth-minute">
-                                <option value="0">00分</option>
                             </select>
                         </div>
                     </div>
@@ -102,7 +106,7 @@
                         </select>
                     </div>
 
-                    <button type="submit" class="btn-primary btn-large">
+                    <button type="submit" class="btn-primary btn-large" id="submit-btn" disabled>
                         ホロスコープを鑑定する
                     </button>
                 </form>
@@ -112,7 +116,7 @@
                 <div class="feature-item glass-card">
                     <div class="feature-icon">&#x2609;</div>
                     <h3>ネイタルチャート</h3>
-                    <p>10天体の精密な位置計算とプラシーダスハウスシステム</p>
+                    <p>Swiss Ephemeris精度の10天体計算とコッホハウスシステム</p>
                 </div>
                 <div class="feature-item glass-card">
                     <div class="feature-icon">&#x25B3;</div>
@@ -226,7 +230,7 @@
                     相性診断をする
                 </button>
                 <button class="btn-secondary" onclick="goToRegistration()">
-                    完全版をメールで受け取る
+                    あやのからのメッセージを受け取る
                 </button>
                 <button class="btn-outline" onclick="resetDiagnosis()">
                     もう一度鑑定する
@@ -308,7 +312,7 @@
                         <div class="form-group">
                             <label for="syn-minute">分</label>
                             <select id="syn-minute">
-                                <script>for(var i=0;i<60;i+=5){document.write('<option value="'+i+'">'+String(i).padStart(2,'0')+'分</option>')}</script>
+                                <script>for(var i=0;i<60;i+=1){document.write('<option value="'+i+'">'+String(i).padStart(2,'0')+'分</option>')}</script>
                             </select>
                         </div>
                     </div>
@@ -334,19 +338,18 @@
         <div class="container">
             <header class="result-header">
                 <button class="btn-back" onclick="goBackToResult()">&larr; チャートに戻る</button>
-                <h1 class="result-title">完全版ホロスコープ鑑定書</h1>
+                <h1 class="result-title">あやのからの特別メッセージ</h1>
                 <div class="section-divider"></div>
             </header>
 
             <div class="glass-card form-card registration-card">
                 <div class="reg-icon">&#x2728;</div>
-                <h2 class="form-title">無料で完全版をお届け</h2>
-                <p class="form-desc">メールアドレスをご登録いただくと、あなた専用の完全版ホロスコープ鑑定書をお届けします。</p>
+                <h2 class="form-title">あやのからの特別メッセージをお届け</h2>
+                <p class="form-desc">メールアドレスをご登録いただくと、あなたの星の配置をもとにした特別なメッセージをあやのからお届けします。</p>
                 <ul class="reg-benefits">
-                    <li>全10天体の詳細な解釈</li>
-                    <li>12ハウスの完全分析</li>
-                    <li>主要アスペクトの詳細レポート</li>
-                    <li>毎月の運勢メール配信</li>
+                    <li>あなたの星座に寄り添った特別メッセージ</li>
+                    <li>星の流れに合わせた開運のヒント</li>
+                    <li>あやのからの限定コラム配信</li>
                 </ul>
 
                 <form id="registration-form">
@@ -365,9 +368,9 @@
                         <input type="email" id="reg-email" placeholder="your@email.com" required>
                     </div>
                     <button type="submit" class="btn-primary btn-large">
-                        無料で登録する
+                        無料で受け取る
                     </button>
-                    <p class="privacy-note">ご登録いただいた情報は鑑定書の送付にのみ使用いたします。</p>
+                    <p class="privacy-note">ご登録いただいた情報はメッセージの送付にのみ使用いたします。</p>
                 </form>
             </div>
 
@@ -378,13 +381,12 @@
     </div>
 
     <!-- ===== Scripts ===== -->
-    <!-- Astronomy Engine (NASA JPL) -->
-    <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
+    <!-- Swiss Ephemeris Engine (Wasm - dynamic import inside swe-engine.js) -->
+    <script src="js/swe-engine.js"></script>
 
     <!-- App modules (dependency order) -->
     <script src="js/location-data.js"></script>
     <script src="js/horoscope-data.js"></script>
-    <script src="js/astronomy-engine.js"></script>
     <script src="js/house-calculator.js"></script>
     <script src="js/aspect-calculator.js"></script>
     <script src="js/natal-chart.js"></script>

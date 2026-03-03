@@ -1,15 +1,26 @@
 /**
- * Astronomy Engine ブラウザラッパー
- * NASA JPL精度の天体位置計算
- * CDN: https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js
+ * Swiss Ephemeris WebAssembly ラッパー
+ * swisseph-wasm (prolaxu) を使用したプロフェッショナル精度の天体計算
+ * JPL DE431エフェメリスに基づく0.001秒角精度
  */
-class AstronomyCalculator {
+class SweEngine {
     constructor() {
-        this.name = 'Astronomy Engine Browser Wrapper';
+        this.swe = null;
+        this.initialized = false;
+
+        // 対応天体
         this.supportedBodies = [
             'Sun', 'Moon', 'Mercury', 'Venus', 'Mars',
             'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'
         ];
+
+        // Swiss Ephemeris天体ID
+        this.planetIds = {
+            Sun: 0, Moon: 1, Mercury: 2, Venus: 3, Mars: 4,
+            Jupiter: 5, Saturn: 6, Uranus: 7, Neptune: 8, Pluto: 9
+        };
+
+        // 星座名
         this.signNames = [
             'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
             'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
@@ -18,6 +29,8 @@ class AstronomyCalculator {
             '牡羊座', '牡牛座', '双子座', '蟹座', '獅子座', '乙女座',
             '天秤座', '蠍座', '射手座', '山羊座', '水瓶座', '魚座'
         ];
+
+        // 天体名
         this.planetNamesJP = {
             Sun: '太陽', Moon: '月', Mercury: '水星', Venus: '金星', Mars: '火星',
             Jupiter: '木星', Saturn: '土星', Uranus: '天王星', Neptune: '海王星', Pluto: '冥王星',
@@ -28,34 +41,28 @@ class AstronomyCalculator {
             Jupiter: '\u2643', Saturn: '\u2644', Uranus: '\u2645', Neptune: '\u2646', Pluto: '\u2647',
             NorthNode: '\u260A', SouthNode: '\u260B', Ascendant: 'ASC', Midheaven: 'MC'
         };
+
+        // 星座グリフ
         this.signGlyphs = [
             '\u2648', '\u2649', '\u264A', '\u264B', '\u264C', '\u264D',
             '\u264E', '\u264F', '\u2650', '\u2651', '\u2652', '\u2653'
         ];
+
+        // エレメント・クオリティ
         this.elements = ['Fire', 'Earth', 'Air', 'Water'];
         this.elementsJP = { Fire: '火', Earth: '地', Air: '風', Water: '水' };
         this.qualities = ['Cardinal', 'Fixed', 'Mutable'];
         this.qualitiesJP = { Cardinal: '活動宮', Fixed: '不動宮', Mutable: '柔軟宮' };
+
+        // 支配星
         this.rulers = {
             Aries: 'Mars', Taurus: 'Venus', Gemini: 'Mercury', Cancer: 'Moon',
             Leo: 'Sun', Virgo: 'Mercury', Libra: 'Venus', Scorpio: 'Pluto',
             Sagittarius: 'Jupiter', Capricorn: 'Saturn', Aquarius: 'Uranus', Pisces: 'Neptune'
         };
-    }
 
-    /**
-     * 生年月日とタイムゾーンからUTC Dateオブジェクトを生成
-     */
-    createUTCDate(year, month, day, hour, minute, timezoneOffset) {
-        const localMs = Date.UTC(year, month - 1, day, hour, minute, 0, 0);
-        return new Date(localMs - timezoneOffset * 3600000);
-    }
-
-    /**
-     * タイムゾーン名からオフセット（時間）を取得
-     */
-    getTimezoneOffset(timezoneName) {
-        const offsets = {
+        // タイムゾーンオフセット（既存互換）
+        this._timezoneOffsets = {
             'Asia/Tokyo': 9, 'Asia/Shanghai': 8, 'Asia/Seoul': 9,
             'Asia/Kolkata': 5.5, 'Asia/Dubai': 4, 'Asia/Bangkok': 7,
             'Asia/Singapore': 8, 'Asia/Hong_Kong': 8,
@@ -69,11 +76,37 @@ class AstronomyCalculator {
             'Africa/Cairo': 2, 'Africa/Johannesburg': 2,
             'UTC': 0
         };
-        return offsets[timezoneName] !== undefined ? offsets[timezoneName] : 9;
     }
 
     /**
-     * 黄道座標を黄道十二宮の座標に変換
+     * Swiss Ephemeris Wasm を初期化（非同期）
+     */
+    async init(onProgress) {
+        if (this.initialized) return;
+
+        if (onProgress) onProgress('Swiss Ephemerisを読み込み中...');
+
+        const { default: SwissEph } = await import(
+            'https://cdn.jsdelivr.net/gh/prolaxu/swisseph-wasm@main/src/swisseph.js'
+        );
+
+        this.swe = new SwissEph();
+        await this.swe.initSwissEph();
+        this.initialized = true;
+
+        if (onProgress) onProgress('天文計算エンジン準備完了');
+    }
+
+    /**
+     * タイムゾーン名からUTCオフセット（時間）を取得
+     */
+    getTimezoneOffset(timezoneName) {
+        return this._timezoneOffsets[timezoneName] !== undefined
+            ? this._timezoneOffsets[timezoneName] : 9;
+    }
+
+    /**
+     * 黄経を星座情報に変換
      */
     eclipticToZodiac(eclipticLongitude) {
         const normalized = ((eclipticLongitude % 360) + 360) % 360;
@@ -109,36 +142,31 @@ class AstronomyCalculator {
     }
 
     /**
-     * 単一天体の位置計算
+     * 単一天体の位置計算（Swiss Ephemeris使用）
      */
-    calculatePlanetPosition(planetName, date) {
+    calculatePlanetPosition(planetName, jd) {
+        const planetId = this.planetIds[planetName];
+        if (planetId === undefined) {
+            return { planet: planetName, error: 'Unknown planet', success: false };
+        }
+
         try {
-            let eclipticLongitude;
+            // SEFLG_SWIEPH(2) | SEFLG_SPEED(256) = 258
+            const result = this.swe.calc_ut(jd, planetId, 258);
+            // result: Float64Array [lon, lat, dist, lonSpeed, latSpeed, distSpeed]
 
-            if (planetName === 'Sun') {
-                const sunPos = Astronomy.SunPosition(date);
-                eclipticLongitude = sunPos.elon;
-            } else if (planetName === 'Moon') {
-                const moonPos = Astronomy.GeoMoon(date);
-                const moonEcliptic = Astronomy.Ecliptic(moonPos);
-                eclipticLongitude = moonEcliptic.elon;
-            } else {
-                const body = Astronomy.Body[planetName];
-                if (!body) {
-                    throw new Error(`Unsupported body: ${planetName}`);
-                }
-                const geoVector = Astronomy.GeoVector(body, date, true);
-                const ecliptic = Astronomy.Ecliptic(geoVector);
-                eclipticLongitude = ecliptic.elon;
-            }
-
+            const eclipticLongitude = result[0];
+            const speed = result[3];
             const zodiacInfo = this.eclipticToZodiac(eclipticLongitude);
+
             return {
                 planet: planetName,
                 nameJP: this.planetNamesJP[planetName],
                 glyph: this.planetGlyphs[planetName],
                 eclipticLongitude: eclipticLongitude,
                 ...zodiacInfo,
+                retrograde: (planetName !== 'Sun' && planetName !== 'Moon') ? speed < 0 : false,
+                speed: speed,
                 success: true
             };
         } catch (error) {
@@ -150,37 +178,33 @@ class AstronomyCalculator {
     /**
      * 全天体の位置を一括計算
      */
-    calculateAllPositions(date) {
+    calculateAllPositions(jd) {
         const planets = {};
         for (const body of this.supportedBodies) {
-            planets[body] = this.calculatePlanetPosition(body, date);
+            planets[body] = this.calculatePlanetPosition(body, jd);
         }
         return planets;
     }
 
     /**
-     * 月のノード（ドラゴンヘッド/テイル）計算
+     * 月のノード計算（真のノード - SE_TRUE_NODE使用）
      */
-    calculateLunarNodes(date) {
+    calculateLunarNodes(jd) {
         try {
-            // 月の平均ノード計算
-            const jd = this.dateToJulianDay(date);
-            const T = (jd - 2451545.0) / 36525.0;
+            // SE_TRUE_NODE = 11, SEFLG_SWIEPH | SEFLG_SPEED = 258
+            const trueNodeResult = this.swe.calc_ut(jd, 11, 258);
+            const northNodeLong = trueNodeResult[0];
+            const southNodeLong = (northNodeLong + 180) % 360;
 
-            // 月の平均昇交点黄経（Meeus）
-            let omega = 125.0445479 - 1934.1362891 * T + 0.0020754 * T * T
-                        + T * T * T / 467441.0 - T * T * T * T / 60616000.0;
-            omega = ((omega % 360) + 360) % 360;
-
-            const northNode = this.eclipticToZodiac(omega);
-            const southNode = this.eclipticToZodiac((omega + 180) % 360);
+            const northNode = this.eclipticToZodiac(northNodeLong);
+            const southNode = this.eclipticToZodiac(southNodeLong);
 
             return {
                 NorthNode: {
                     planet: 'NorthNode',
                     nameJP: this.planetNamesJP.NorthNode,
                     glyph: this.planetGlyphs.NorthNode,
-                    eclipticLongitude: omega,
+                    eclipticLongitude: northNodeLong,
                     ...northNode,
                     success: true
                 },
@@ -188,7 +212,7 @@ class AstronomyCalculator {
                     planet: 'SouthNode',
                     nameJP: this.planetNamesJP.SouthNode,
                     glyph: this.planetGlyphs.SouthNode,
-                    eclipticLongitude: (omega + 180) % 360,
+                    eclipticLongitude: southNodeLong,
                     ...southNode,
                     success: true
                 }
@@ -200,77 +224,34 @@ class AstronomyCalculator {
     }
 
     /**
-     * DateオブジェクトをJulian Dayに変換
+     * 逆行チェック（SEFLG_SPEEDの速度データを使用）
+     */
+    isRetrograde(planetName, jd) {
+        if (planetName === 'Sun' || planetName === 'Moon') return false;
+        const pos = this.calculatePlanetPosition(planetName, jd);
+        return pos.success && pos.speed < 0;
+    }
+
+    /**
+     * Julian Dayへの変換（Swiss Ephemeris使用）
      */
     dateToJulianDay(date) {
         const y = date.getUTCFullYear();
         const m = date.getUTCMonth() + 1;
-        const d = date.getUTCDate() + date.getUTCHours() / 24
-                  + date.getUTCMinutes() / 1440 + date.getUTCSeconds() / 86400;
-
-        let yr = y, mo = m;
-        if (mo <= 2) { yr -= 1; mo += 12; }
-
-        const A = Math.floor(yr / 100);
-        const B = 2 - A + Math.floor(A / 4);
-
-        return Math.floor(365.25 * (yr + 4716)) + Math.floor(30.6001 * (mo + 1)) + d + B - 1524.5;
+        const d = date.getUTCDate();
+        const h = date.getUTCHours() + date.getUTCMinutes() / 60 + date.getUTCSeconds() / 3600;
+        return this.swe.julday(y, m, d, h);
     }
 
     /**
-     * 黄道傾斜角の計算（Meeus）
+     * 黄道傾斜角の計算（Meeus - ハウス計算用互換）
      */
     calculateObliquity(jd) {
         const T = (jd - 2451545.0) / 36525.0;
-        const eps0 = 23.0 + 26.0 / 60.0 + 21.448 / 3600.0
-                     - (46.8150 / 3600.0) * T
-                     - (0.00059 / 3600.0) * T * T
-                     + (0.001813 / 3600.0) * T * T * T;
-        return eps0;
-    }
-
-    /**
-     * グリニッジ恒星時の計算
-     */
-    calculateGMST(jd) {
-        const T = (jd - 2451545.0) / 36525.0;
-        let gmst = 280.46061837 + 360.98564736629 * (jd - 2451545.0)
-                   + 0.000387933 * T * T - T * T * T / 38710000.0;
-        return ((gmst % 360) + 360) % 360;
-    }
-
-    /**
-     * 地方恒星時の計算
-     */
-    calculateLST(jd, longitude) {
-        const gmst = this.calculateGMST(jd);
-        let lst = gmst + longitude;
-        return ((lst % 360) + 360) % 360;
-    }
-
-    /**
-     * 惑星の逆行チェック
-     */
-    isRetrograde(planetName, date) {
-        if (planetName === 'Sun' || planetName === 'Moon') return false;
-        try {
-            const dt = 1 / 1440; // 1分
-            const date1 = new Date(date.getTime() - dt * 86400000);
-            const date2 = new Date(date.getTime() + dt * 86400000);
-
-            const pos1 = this.calculatePlanetPosition(planetName, date1);
-            const pos2 = this.calculatePlanetPosition(planetName, date2);
-
-            if (!pos1.success || !pos2.success) return false;
-
-            let diff = pos2.eclipticLongitude - pos1.eclipticLongitude;
-            if (diff > 180) diff -= 360;
-            if (diff < -180) diff += 360;
-
-            return diff < 0;
-        } catch {
-            return false;
-        }
+        return 23.0 + 26.0 / 60.0 + 21.448 / 3600.0
+               - (46.8150 / 3600.0) * T
+               - (0.00059 / 3600.0) * T * T
+               + (0.001813 / 3600.0) * T * T * T;
     }
 
     /**
@@ -278,33 +259,42 @@ class AstronomyCalculator {
      */
     calculateFullChart(year, month, day, hour, minute, latitude, longitude, timezoneName) {
         const tzOffset = this.getTimezoneOffset(timezoneName);
-        const utcDate = this.createUTCDate(year, month, day, hour, minute, tzOffset);
-        const jd = this.dateToJulianDay(utcDate);
+
+        // Swiss Ephemerisのタイムゾーン変換
+        const utc = this.swe.utc_time_zone(year, month, day, hour, minute, 0, tzOffset);
+
+        // Julian Day計算
+        const decimalHour = utc.hour + utc.minute / 60 + utc.second / 3600;
+        const jd = this.swe.julday(utc.year, utc.month, utc.day, decimalHour);
 
         // 全惑星位置
-        const planets = this.calculateAllPositions(utcDate);
+        const planets = this.calculateAllPositions(jd);
 
-        // 月のノード
-        const nodes = this.calculateLunarNodes(utcDate);
-
-        // 逆行チェック
-        for (const [name, data] of Object.entries(planets)) {
-            if (data.success) {
-                data.retrograde = this.isRetrograde(name, utcDate);
-            }
-        }
+        // 月のノード（真のノード）
+        const nodes = this.calculateLunarNodes(jd);
 
         return {
             birthData: { year, month, day, hour, minute, latitude, longitude, timezone: timezoneName },
-            utcDate: utcDate,
             julianDay: jd,
             planets: planets,
             nodes: nodes,
-            obliquity: this.calculateObliquity(jd),
-            gmst: this.calculateGMST(jd),
-            lst: this.calculateLST(jd, longitude)
+            obliquity: this.calculateObliquity(jd)
         };
+    }
+
+    /**
+     * リソース解放
+     */
+    close() {
+        if (this.swe) {
+            this.swe.close();
+            this.swe = null;
+            this.initialized = false;
+        }
     }
 }
 
-window.AstronomyCalculator = AstronomyCalculator;
+// グローバルに公開（既存スクリプトとの互換性）
+window.SweEngine = SweEngine;
+// AstronomyCalculatorの代替として使えるようにエイリアス
+window.AstronomyCalculator = SweEngine;

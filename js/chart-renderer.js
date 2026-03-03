@@ -303,7 +303,7 @@ class ChartRenderer {
                 nameJP: data.nameJP,
                 degree: data.totalDegrees,
                 retrograde: data.retrograde,
-                house: houses ? new HouseCalculator().getPlanetHouse(data.totalDegrees, houses.cusps) : 0,
+                house: houses ? HouseCalculator.getPlanetHouse(data.totalDegrees, houses.cusps) : 0,
                 sign: data.signJP,
                 degreeInSign: data.dms ? data.dms.formatted : ''
             });
@@ -319,7 +319,7 @@ class ChartRenderer {
                     nameJP: data.nameJP,
                     degree: data.totalDegrees,
                     retrograde: false,
-                    house: houses ? new HouseCalculator().getPlanetHouse(data.totalDegrees, houses.cusps) : 0,
+                    house: houses ? HouseCalculator.getPlanetHouse(data.totalDegrees, houses.cusps) : 0,
                     sign: data.signJP,
                     degreeInSign: data.dms ? data.dms.formatted : ''
                 });
@@ -529,8 +529,10 @@ class ChartRenderer {
     renderSynastryChart(chart1Data, chart2Data) {
         const asc = chart1Data.houses.ascendant;
 
+        // シナストリーは外側リングが大きいのでviewBoxを拡張（中心座標はそのまま）
+        const pad = 50;
         const svg = this._el('svg', {
-            viewBox: `0 0 ${this.size} ${this.size}`,
+            viewBox: `${-pad} ${-pad} ${this.size + pad * 2} ${this.size + pad * 2}`,
             xmlns: this.NS,
             class: 'horoscope-chart synastry-chart'
         });

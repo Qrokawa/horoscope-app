@@ -32,20 +32,18 @@ export async function onRequestPost(context) {
         const lastName = data.lastName;
         const firstName = data.firstName;
         const birthdate = data.birthdate || '';
-        const sunSign = data.sunSign || '';
-        const moonSign = data.moonSign || '';
-        const ascSign = data.ascSign || '';
+        const pref = data.pref || '';
 
         // UTAGE送信
         const utageData = new URLSearchParams({
+            'mail': email,
             'sei': lastName,
             'mei': firstName,
-            'mail': email,
-            'free1': birthdate,
-            'free2': sunSign + ' / ' + moonSign + ' / ASC ' + ascSign
+            'free3': birthdate,
+            'pref': pref
         });
 
-        const UTAGE_URL = env.UTAGE_URL || 'https://utage-system.com/r/cK5cjS14n6De/store';
+        const UTAGE_URL = env.UTAGE_URL || 'https://utage-system.com/r/tw3tELQ6GyrO/store';
 
         const res = await fetch(UTAGE_URL, {
             method: 'POST',

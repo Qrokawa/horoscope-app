@@ -1,32 +1,38 @@
 /**
  * ネイタルチャート統合エンジン
  * 全計算モジュールを統合し、完全なチャートデータを生成
+ * Swiss Ephemeris版
  */
 class NatalChart {
-    constructor() {
-        this.astro = new AstronomyCalculator();
-        this.houseCalc = new HouseCalculator();
+    constructor(sweEngine) {
+        this.astro = sweEngine;
+        this.houseCalc = new HouseCalculator(sweEngine);
         this.aspectCalc = new AspectCalculator();
     }
 
     /**
-     * 完全なネイタルチャートを計算
+     * 完全なネイタルチャートを計算（async）
      */
-    calculate(year, month, day, hour, minute, latitude, longitude, timezoneName) {
+    async calculate(year, month, day, hour, minute, latitude, longitude, timezoneName) {
+        // Swiss Ephemerisが初期化されていなければ初期化
+        if (!this.astro.initialized) {
+            await this.astro.init();
+        }
+
         // 1. 天体計算の基礎データ
         const chartBase = this.astro.calculateFullChart(
             year, month, day, hour, minute, latitude, longitude, timezoneName
         );
 
-        // 2. ハウス計算
+        // 2. ハウス計算（Swiss Ephemeris ネイティブKoch）
         const houses = this.houseCalc.calculateHouses(
-            chartBase.julianDay, latitude, longitude, chartBase.obliquity
+            chartBase.julianDay, latitude, longitude
         );
 
         // 3. 惑星のハウス配置を決定
         for (const [name, data] of Object.entries(chartBase.planets)) {
             if (data.success) {
-                data.house = this.houseCalc.getPlanetHouse(data.totalDegrees, houses.cusps);
+                data.house = HouseCalculator.getPlanetHouse(data.totalDegrees, houses.cusps);
                 data.houseMeaning = HouseCalculator.getHouseMeaning(data.house);
             }
         }
@@ -35,7 +41,7 @@ class NatalChart {
         if (chartBase.nodes) {
             for (const [name, data] of Object.entries(chartBase.nodes)) {
                 if (data.success) {
-                    data.house = this.houseCalc.getPlanetHouse(data.totalDegrees, houses.cusps);
+                    data.house = HouseCalculator.getPlanetHouse(data.totalDegrees, houses.cusps);
                     data.houseMeaning = HouseCalculator.getHouseMeaning(data.house);
                 }
             }
@@ -164,19 +170,18 @@ class NatalChart {
 
             // ASCの支配星ならボーナス
             if (houses.ascendantZodiac) {
-                const ascRuler = new AstronomyCalculator().rulers[houses.ascendantZodiac.sign];
+                const ascRuler = this.astro.rulers[houses.ascendantZodiac.sign];
                 if (ascRuler === name) scores[name] += 10;
             }
 
             // MCの支配星ならボーナス
             if (houses.midheavenZodiac) {
-                const mcRuler = new AstronomyCalculator().rulers[houses.midheavenZodiac.sign];
+                const mcRuler = this.astro.rulers[houses.midheavenZodiac.sign];
                 if (mcRuler === name) scores[name] += 7;
             }
 
             // 本来の星座にいれば（ディグニティ）ボーナス
-            const ruler = new AstronomyCalculator().rulers;
-            for (const [sign, rulerPlanet] of Object.entries(ruler)) {
+            for (const [sign, rulerPlanet] of Object.entries(this.astro.rulers)) {
                 if (rulerPlanet === name && data.sign === sign) {
                     scores[name] += 5;
                 }
@@ -194,16 +199,15 @@ class NatalChart {
         }
 
         const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
-        const astro = new AstronomyCalculator();
 
         return {
             planet: sorted[0][0],
-            nameJP: astro.planetNamesJP[sorted[0][0]],
-            glyph: astro.planetGlyphs[sorted[0][0]],
+            nameJP: this.astro.planetNamesJP[sorted[0][0]],
+            glyph: this.astro.planetGlyphs[sorted[0][0]],
             score: sorted[0][1],
             ranking: sorted.map(([name, score]) => ({
-                name, nameJP: astro.planetNamesJP[name],
-                glyph: astro.planetGlyphs[name], score
+                name, nameJP: this.astro.planetNamesJP[name],
+                glyph: this.astro.planetGlyphs[name], score
             }))
         };
     }

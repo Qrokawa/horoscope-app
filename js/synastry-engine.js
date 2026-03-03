@@ -1,24 +1,25 @@
 /**
  * 相性診断エンジン（シナストリー）
  * 2人のネイタルチャートを比較し、相性を分析
+ * Swiss Ephemeris版（async対応）
  */
 class SynastryEngine {
-    constructor() {
-        this.natalChart = new NatalChart();
+    constructor(sweEngine) {
+        this.natalChart = new NatalChart(sweEngine);
         this.aspectCalc = new AspectCalculator();
     }
 
     /**
-     * 2人の完全な相性診断を実行
+     * 2人の完全な相性診断を実行（async）
      */
-    analyze(person1Data, person2Data) {
+    async analyze(person1Data, person2Data) {
         // 1. 両者のネイタルチャートを計算
-        const chart1 = this.natalChart.calculate(
+        const chart1 = await this.natalChart.calculate(
             person1Data.year, person1Data.month, person1Data.day,
             person1Data.hour, person1Data.minute,
             person1Data.latitude, person1Data.longitude, person1Data.timezone
         );
-        const chart2 = this.natalChart.calculate(
+        const chart2 = await this.natalChart.calculate(
             person2Data.year, person2Data.month, person2Data.day,
             person2Data.hour, person2Data.minute,
             person2Data.latitude, person2Data.longitude, person2Data.timezone
@@ -133,7 +134,6 @@ class SynastryEngine {
     _analyzeMoonCompatibility(moon1, moon2) {
         if (!moon1.success || !moon2.success) return { score: 50, description: '' };
 
-        // 月のエレメント相性
         const moonElements = {
             'Fire-Fire': { score: 75, desc: '感情的にダイナミックで、互いの情熱を高め合います。' },
             'Fire-Earth': { score: 55, desc: '感情表現のスタイルが異なりますが、安定と情熱のバランスを学べます。' },
@@ -177,14 +177,12 @@ class SynastryEngine {
         let score = 50;
         const details = [];
 
-        // Person1の金星とPerson2の火星
         const v1m2Diff = this._signDifference(v1.signIndex, m2.signIndex);
         if (v1m2Diff === 0) { score += 20; details.push('金星と火星の合は強い化学反応を示します'); }
         else if (v1m2Diff === 4) { score += 15; details.push('金星と火星のトラインは自然な魅力の調和'); }
         else if (v1m2Diff === 2) { score += 10; details.push('金星と火星のセクスタイルは心地よい引力'); }
         else if (v1m2Diff === 6) { score += 12; details.push('金星と火星のオポジションは磁石のような引力'); }
 
-        // Person2の金星とPerson1の火星
         const v2m1Diff = this._signDifference(v2.signIndex, m1.signIndex);
         if (v2m1Diff === 0) { score += 20; details.push('金星と火星の合による深い情熱的つながり'); }
         else if (v2m1Diff === 4) { score += 15; details.push('相互のトラインが調和的な愛を育みます'); }
@@ -274,7 +272,6 @@ class SynastryEngine {
             text: `${elementCompat.person1Element.nameJP}のエレメントと${elementCompat.person2Element.nameJP}のエレメント。${elementCompat.description}`
         });
 
-        // キーアスペクト
         if (synastry.summary.keyAspects.length > 0) {
             sections.push({
                 title: '重要なアスペクト',
