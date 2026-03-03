@@ -220,8 +220,10 @@ class InterpretationEngine {
      * バランスセクション
      */
     _generateBalanceSection(balance) {
-        const elementText = this.getElementBalanceInterpretation(balance.dominantElement.name);
-        const qualityText = this.getQualityBalanceInterpretation(balance.dominantQuality.name);
+        const elementData = this.getElementBalanceInterpretation(balance.dominantElement.name);
+        const qualityData = this.getQualityBalanceInterpretation(balance.dominantQuality.name);
+        const elementText = elementData ? (elementData.interpretation || elementData) : '';
+        const qualityText = qualityData ? (qualityData.interpretation || qualityData) : '';
 
         return {
             id: 'balance',
