@@ -264,6 +264,7 @@
 
         // ローディング画面表示
         showScreen('screen-loading');
+        var loadingStart = Date.now();
 
         try {
             // Wasmがまだ初期化されていなければ待機
@@ -287,7 +288,24 @@
 
             updateLoadingText('ホロスコープを描画中...');
 
-            // 少し待ってUI更新
+            // 最低3秒間ローディング画面を表示して期待感を高める
+            var elapsed = Date.now() - loadingStart;
+            var minDuration = 3000;
+            if (elapsed < minDuration) {
+                var remaining = minDuration - elapsed;
+                // 残り時間でメッセージを段階的に切り替え
+                var messages = [
+                    'アスペクトを解析中...',
+                    'エレメントバランスを分析中...',
+                    '鑑定結果を準備中...'
+                ];
+                var step = Math.floor(remaining / messages.length);
+                for (var mi = 0; mi < messages.length; mi++) {
+                    await new Promise(function(resolve) { setTimeout(resolve, step); });
+                    updateLoadingText(messages[mi]);
+                }
+            }
+
             await new Promise(function(resolve) { setTimeout(resolve, 300); });
 
             displayResults();
