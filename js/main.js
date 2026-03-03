@@ -639,7 +639,7 @@
         })
         .then(function(res) { return res.json(); })
         .then(function(data) {
-            if (data.success || data.partial) {
+            if (data.success) {
                 alert('ご登録ありがとうございます！完全版の鑑定書をメールでお届けします。');
                 if (submitBtn) {
                     submitBtn.textContent = '登録完了';
