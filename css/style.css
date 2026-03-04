@@ -1746,12 +1746,13 @@ img {
 }
 
 .radio-label {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
   color: var(--text-secondary);
   cursor: pointer;
   font-size: 0.9rem;
+  line-height: 1;
   transition: color var(--transition-fast);
   user-select: none;
 }
@@ -1760,14 +1761,20 @@ img {
 .radio-label input[type="radio"] {
   -webkit-appearance: none;
   appearance: none;
-  width: 15px;
-  height: 15px;
+  width: 14px;
+  height: 14px;
+  min-width: 14px;
+  min-height: 14px;
+  max-width: 14px;
+  max-height: 14px;
+  padding: 0;
   border: 1.5px solid var(--text-muted);
   border-radius: 50%;
   margin: 0;
   cursor: pointer;
   flex-shrink: 0;
   background: transparent;
+  box-sizing: content-box;
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 
