@@ -641,7 +641,7 @@
         }
     }
 
-    // ===== メール登録 =====
+    // ===== メール登録（UTAGEへ直接送信） =====
     function handleRegistration() {
         var email = document.getElementById('reg-email').value;
         var lastName = document.getElementById('reg-lastname').value;
@@ -666,28 +666,26 @@
             pref = locationSelect.options[locationSelect.selectedIndex].textContent;
         }
 
-        var payload = {
-            email: email,
-            lastName: lastName,
-            firstName: firstName,
-            birthdate: bd.year + '/' + bd.month + '/' + bd.day,
-            pref: pref
-        };
+        // UTAGEフォームのフィールド名に合わせてURLSearchParamsを構築
+        var formData = new URLSearchParams();
+        formData.append('mail', email);
+        formData.append('sei', lastName);
+        formData.append('mei', firstName);
+        formData.append('free3', bd.year ? (bd.year + '/' + bd.month + '/' + bd.day) : '');
+        formData.append('pref', pref);
 
-        fetch('/api/submit', {
+        // ブラウザからUTAGEへ直接POST（no-cors: プリフライト不要のシンプルリクエスト）
+        fetch('https://utage-system.com/r/tw3tELQ6GyrO/store', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData.toString()
         })
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-            if (data.success) {
-                alert('ご登録ありがとうございます！あやのから特別なメッセージをお届けします。');
-                if (submitBtn) {
-                    submitBtn.textContent = '登録完了';
-                }
-            } else {
-                throw new Error('送信失敗');
+        .then(function() {
+            // no-corsではレスポンスはopaqueだがリクエストは送信される
+            alert('ご登録ありがとうございます！あやのから特別なメッセージをお届けします。');
+            if (submitBtn) {
+                submitBtn.textContent = '登録完了';
             }
         })
         .catch(function(err) {
@@ -695,7 +693,7 @@
             alert('送信に失敗しました。もう一度お試しください。');
             if (submitBtn) {
                 submitBtn.disabled = false;
-                submitBtn.textContent = '無料で登録する';
+                submitBtn.textContent = '無料で受け取る';
             }
         });
     }
