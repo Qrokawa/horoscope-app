@@ -61,7 +61,7 @@ class ChartRenderer {
      * 度数をSVGの角度に変換（ASCを左=180度に配置）
      */
     _degToAngle(degree, ascendant) {
-        return (180 - (degree - ascendant)) % 360;
+        return ((270 - (degree - ascendant)) % 360 + 360) % 360;
     }
 
     /**

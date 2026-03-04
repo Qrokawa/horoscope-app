@@ -92,6 +92,29 @@ class SweEngine {
 
         this.swe = new SwissEph();
         await this.swe.initSwissEph();
+
+        // Fix prolaxu/swisseph-wasm bug: houses() second definition uses 'string'
+        // type for hsys parameter instead of 'number', causing Koch to be ignored.
+        // Monkey-patch with correct ccall types.
+        const M = this.swe.SweModule;
+        if (M && M.ccall && M._malloc && M._free) {
+            this.swe.houses = function(julianDay, geoLat, geoLon, houseSystem) {
+                var cuspsPtr = M._malloc(13 * 8);
+                var ascmcPtr = M._malloc(10 * 8);
+                var hsys = typeof houseSystem === 'string' ? houseSystem.charCodeAt(0) : houseSystem;
+                M.ccall(
+                    'swe_houses', 'number',
+                    ['number', 'number', 'number', 'number', 'pointer', 'pointer'],
+                    [julianDay, geoLat, geoLon, hsys, cuspsPtr, ascmcPtr]
+                );
+                var cusps = Float64Array.from(new Float64Array(M.HEAPF64.buffer, cuspsPtr, 13));
+                var ascmc = Float64Array.from(new Float64Array(M.HEAPF64.buffer, ascmcPtr, 10));
+                M._free(cuspsPtr);
+                M._free(ascmcPtr);
+                return { cusps: cusps, ascmc: ascmc };
+            };
+        }
+
         this.initialized = true;
 
         if (onProgress) onProgress('天文計算エンジン準備完了');
@@ -124,7 +147,7 @@ class SweEngine {
             quality: this.qualities[signIndex % 3],
             qualityJP: this.qualitiesJP[this.qualities[signIndex % 3]],
             ruler: this.rulers[this.signNames[signIndex]],
-            glyph: this.signGlyphs[signIndex]
+            signGlyph: this.signGlyphs[signIndex]
         };
     }
 
