@@ -51,7 +51,8 @@ export async function onRequestPost(context) {
                 'Content-Type': 'application/x-www-form-urlencoded',
                 'User-Agent': 'Mozilla/5.0 (compatible; HoroscopeApp/1.0)'
             },
-            body: utageData.toString()
+            body: utageData.toString(),
+            redirect: 'manual'
         });
 
         const success = res.status >= 200 && res.status < 400;
