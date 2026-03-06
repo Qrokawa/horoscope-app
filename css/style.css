@@ -1029,7 +1029,11 @@ img {
   font-size: 0.85rem;
 }
 
-.planet-table .retrograde {
+.planet-table .retrograde td {
+  font-size: inherit;
+}
+
+.planet-table .retrograde-badge {
   color: var(--harmony-low);
   font-size: 0.75rem;
   font-weight: 600;
