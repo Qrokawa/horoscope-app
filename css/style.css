@@ -672,6 +672,13 @@ img {
   z-index: 2;
 }
 
+.loading-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 300px;
+}
+
 #screen-loading.active {
   display: flex;
   opacity: 1;
@@ -731,6 +738,8 @@ img {
   font-size: 1rem;
   color: var(--text-secondary);
   min-height: 2em;
+  width: 300px;
+  text-align: center;
   transition: opacity 0.4s ease;
   letter-spacing: 0.06em;
 }
