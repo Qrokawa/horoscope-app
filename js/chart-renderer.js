@@ -184,6 +184,7 @@ class ChartRenderer {
             fill: 'none', stroke: this.colors.goldDark, 'stroke-width': '1'
         }));
 
+        // パス1: セクター背景と区切り線を先に描画
         for (let i = 0; i < 12; i++) {
             const signStart = i * 30;
             const signEnd = (i + 1) * 30;
@@ -218,8 +219,11 @@ class ChartRenderer {
                 x2: lineEnd.x, y2: lineEnd.y,
                 stroke: this.colors.goldDark, 'stroke-width': '1'
             }));
+        }
 
-            // 星座シンボル（SVGパス）
+        // パス2: 星座シンボルを全セクターの上に描画（背景に隠れないように）
+        for (let i = 0; i < 12; i++) {
+            const signStart = i * 30;
             const midAngle = this._degToAngle(signStart + 15, asc);
             const glyphPos = this._polarToXY(midAngle, (this.R.outerSign + this.R.innerSign) / 2);
             const signGroup = this._el('g', {

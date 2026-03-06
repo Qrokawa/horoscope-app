@@ -2013,12 +2013,45 @@ img {
   margin-bottom: var(--space-sm);
   border-radius: var(--radius-sm);
   background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background var(--transition-fast);
 }
 
 .aspect-detail-header {
   font-size: 0.9rem;
   color: var(--text-primary);
   margin-bottom: var(--space-xs);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.aspect-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.aspect-harmonious .aspect-dot {
+  background: var(--harmony-high);
+  box-shadow: 0 0 4px rgba(74, 222, 128, 0.4);
+}
+
+.aspect-challenging .aspect-dot {
+  background: var(--harmony-low);
+  box-shadow: 0 0 4px rgba(248, 113, 113, 0.4);
+}
+
+.aspect-neutral .aspect-dot {
+  background: var(--harmony-mid);
+  box-shadow: 0 0 4px rgba(250, 204, 21, 0.4);
+}
+
+.aspect-adjusting .aspect-dot {
+  background: var(--info-blue);
+  box-shadow: 0 0 4px rgba(96, 165, 250, 0.4);
 }
 
 .aspect-detail-name {
@@ -2038,19 +2071,23 @@ img {
 }
 
 .aspect-detail.aspect-harmonious {
-  border-left: 3px solid var(--harmony-high);
+  background: rgba(74, 222, 128, 0.04);
+  border-color: rgba(74, 222, 128, 0.08);
 }
 
 .aspect-detail.aspect-challenging {
-  border-left: 3px solid var(--harmony-low);
+  background: rgba(248, 113, 113, 0.04);
+  border-color: rgba(248, 113, 113, 0.08);
 }
 
 .aspect-detail.aspect-neutral {
-  border-left: 3px solid var(--harmony-mid);
+  background: rgba(250, 204, 21, 0.04);
+  border-color: rgba(250, 204, 21, 0.08);
 }
 
 .aspect-detail.aspect-adjusting {
-  border-left: 3px solid var(--info-blue);
+  background: rgba(96, 165, 250, 0.04);
+  border-color: rgba(96, 165, 250, 0.08);
 }
 
 /* Planet Ranking */
@@ -2642,13 +2679,21 @@ body::after {
   box-shadow: 0 0 8px rgba(240, 192, 64, 0.15);
 }
 
-/* Aspect detail left border glow */
-.aspect-detail.aspect-harmonious {
-  box-shadow: inset 3px 0 8px -3px rgba(74, 222, 128, 0.1);
+/* Aspect detail subtle glow */
+.aspect-detail.aspect-harmonious:hover {
+  background: rgba(74, 222, 128, 0.06);
 }
 
-.aspect-detail.aspect-challenging {
-  box-shadow: inset 3px 0 8px -3px rgba(248, 113, 113, 0.1);
+.aspect-detail.aspect-challenging:hover {
+  background: rgba(248, 113, 113, 0.06);
+}
+
+.aspect-detail.aspect-neutral:hover {
+  background: rgba(250, 204, 21, 0.06);
+}
+
+.aspect-detail.aspect-adjusting:hover {
+  background: rgba(96, 165, 250, 0.06);
 }
 
 /* Planet table planet name refined */

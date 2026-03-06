@@ -467,7 +467,7 @@
                 html += '<div class="interp-aspects">';
                 section.aspectList.forEach(function(a) {
                     html += '<div class="aspect-detail aspect-' + a.harmony + '">';
-                    html += '<div class="aspect-detail-header">' + a.planets + ' <span class="aspect-detail-name">' + a.aspect + '</span> <span class="aspect-detail-orb">(' + a.orb + ')</span></div>';
+                    html += '<div class="aspect-detail-header"><span class="aspect-dot"></span>' + a.planets + ' <span class="aspect-detail-name">' + a.aspect + '</span> <span class="aspect-detail-orb">(' + a.orb + ')</span></div>';
                     if (a.interpretation) html += '<p class="aspect-detail-text">' + a.interpretation + '</p>';
                     html += '</div>';
                 });
