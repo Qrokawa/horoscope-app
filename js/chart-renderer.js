@@ -50,11 +50,35 @@ class ChartRenderer {
             bg: '#0a0e1a'
         };
 
-        this.signGlyphs = [
-            '\u2648', '\u2649', '\u264A', '\u264B', '\u264C', '\u264D',
-            '\u264E', '\u264F', '\u2650', '\u2651', '\u2652', '\u2653'
-        ];
         this.signElements = ['fire', 'earth', 'air', 'water'];
+
+        // SVGパスベースの星座シンボル（線画、中心0,0 基準、スケール約±7）
+        this.signPaths = [
+            // Aries: 牡羊座 — 二本の角
+            'M-4,6 C-4,-2 -1,-6 0,-2 C1,-6 4,-2 4,6',
+            // Taurus: 牡牛座 — 牛の頭
+            'M-5,-2 C-5,-6 -2,-7 0,-5 C2,-7 5,-6 5,-2 M0,-5 L0,6 M-4,6 C-4,3 4,3 4,6',
+            // Gemini: 双子座 — 双子の柱
+            'M-5,-6 L5,-6 M-5,6 L5,6 M-2,-6 L-2,6 M2,-6 L2,6',
+            // Cancer: 蟹座 — 二つの渦
+            'M5,-1 C5,-5 -1,-5 -1,-1 M-5,1 C-5,5 1,5 1,1 M-1,-1 C-1,1 -3,1 -3,-1 M1,1 C1,-1 3,-1 3,1',
+            // Leo: 獅子座 — 丸と曲線
+            'M-3,-4 C-5,-4 -5,-1 -3,-1 C-1,-1 -1,-4 -3,-4 M-3,-1 C0,2 3,5 5,3 C7,1 4,-2 2,0 C0,2 2,5 5,5',
+            // Virgo: 乙女座 — Mに尾
+            'M-5,4 L-5,-4 C-5,-6 -3,-6 -3,-4 L-3,4 C-3,-6 -1,-6 -1,-4 L-1,4 C-1,-6 1,-6 1,-4 L1,2 C1,4 3,5 5,3 M-1,1 L4,1',
+            // Libra: 天秤座 — 天秤
+            'M-5,5 L5,5 M-5,1 L5,1 M0,1 L0,-1 C-4,-1 -4,-5 0,-5 C4,-5 4,-1 0,-1',
+            // Scorpio: 蠍座 — Mに矢尾
+            'M-5,4 L-5,-4 C-5,-6 -3,-6 -3,-4 L-3,4 C-3,-6 -1,-6 -1,-4 L-1,4 C-1,-6 1,-6 1,-4 L1,4 L3,2 M1,4 L4,4 L3,2 M4,4 L5,3',
+            // Sagittarius: 射手座 — 矢
+            'M-4,6 L5,-5 M5,-5 L1,-5 M5,-5 L5,-1 M-3,3 L3,-3 M-2,0 L1,3',
+            // Capricorn: 山羊座 — 山羊の角と尾
+            'M-5,-3 L-5,-6 C-2,-6 0,-4 0,-1 L0,2 C0,4 2,6 4,5 C6,4 5,2 3,2 C1,2 1,4 3,6',
+            // Aquarius: 水瓶座 — 二本の波
+            'M-5,-2 L-3,0 L-1,-2 L1,0 L3,-2 L5,0 M-5,2 L-3,4 L-1,2 L1,4 L3,2 L5,4',
+            // Pisces: 魚座 — 二匹の魚
+            'M0,-6 L0,6 M-5,0 L5,0 M-1,-6 C-4,-6 -5,-3 -5,0 C-5,3 -4,6 -1,6 M1,-6 C4,-6 5,-3 5,0 C5,3 4,6 1,6'
+        ];
     }
 
     /**
@@ -195,17 +219,22 @@ class ChartRenderer {
                 stroke: this.colors.goldDark, 'stroke-width': '1'
             }));
 
-            // 星座グリフ
+            // 星座シンボル（SVGパス）
             const midAngle = this._degToAngle(signStart + 15, asc);
             const glyphPos = this._polarToXY(midAngle, (this.R.outerSign + this.R.innerSign) / 2);
-            const glyphText = this._el('text', {
-                x: glyphPos.x, y: glyphPos.y,
-                'text-anchor': 'middle', 'dominant-baseline': 'central',
-                fill: this.colors.gold, 'font-size': '18', 'font-family': 'serif',
+            const signGroup = this._el('g', {
+                transform: `translate(${glyphPos.x}, ${glyphPos.y}) scale(0.95)`,
                 'pointer-events': 'none'
             });
-            glyphText.textContent = this.signGlyphs[i];
-            svg.appendChild(glyphText);
+            signGroup.appendChild(this._el('path', {
+                d: this.signPaths[i],
+                fill: 'none',
+                stroke: this.colors.gold,
+                'stroke-width': '1.3',
+                'stroke-linecap': 'round',
+                'stroke-linejoin': 'round'
+            }));
+            svg.appendChild(signGroup);
         }
     }
 
