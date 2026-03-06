@@ -28,17 +28,9 @@
     // ===== Swiss Ephemeris 初期化 =====
     async function initSwissEphemeris() {
         try {
-            var indicator = document.getElementById('swe-loading-indicator');
-            var statusEl = document.getElementById('swe-status');
-            if (indicator) indicator.style.display = 'block';
-
             sweEngine = new SweEngine();
-            await sweEngine.init(function(msg) {
-                if (statusEl) statusEl.textContent = msg;
-            });
+            await sweEngine.init();
             sweReady = true;
-
-            if (indicator) indicator.style.display = 'none';
 
             // 送信ボタンを有効化
             var submitBtn = document.querySelector('#birth-form .btn-primary');
