@@ -99,7 +99,7 @@ class SweEngine {
         const M = this.swe.SweModule;
         if (M && M.ccall && M._malloc && M._free) {
             this.swe.houses = function(julianDay, geoLat, geoLon, houseSystem) {
-                var cuspsPtr = M._malloc(13 * 8);
+                var cuspsPtr = M._malloc(14 * 8);
                 var ascmcPtr = M._malloc(10 * 8);
                 var hsys = typeof houseSystem === 'string' ? houseSystem.charCodeAt(0) : houseSystem;
                 M.ccall(
@@ -107,7 +107,7 @@ class SweEngine {
                     ['number', 'number', 'number', 'number', 'pointer', 'pointer'],
                     [julianDay, geoLat, geoLon, hsys, cuspsPtr, ascmcPtr]
                 );
-                var cusps = Float64Array.from(new Float64Array(M.HEAPF64.buffer, cuspsPtr, 13));
+                var cusps = Float64Array.from(new Float64Array(M.HEAPF64.buffer, cuspsPtr, 14));
                 var ascmc = Float64Array.from(new Float64Array(M.HEAPF64.buffer, ascmcPtr, 10));
                 M._free(cuspsPtr);
                 M._free(ascmcPtr);
