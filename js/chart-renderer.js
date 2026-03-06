@@ -129,16 +129,17 @@ class ChartRenderer {
         const { planets, houses, nodes } = chartData;
         const asc = houses.ascendant;
 
-        // SVGを作成
+        // SVGを作成（外周の星座シンボルが見切れないようパディング追加）
+        const pad = 20;
         const svg = this._el('svg', {
-            viewBox: `0 0 ${this.size} ${this.size}`,
+            viewBox: `${-pad} ${-pad} ${this.size + pad * 2} ${this.size + pad * 2}`,
             xmlns: this.NS,
             class: 'horoscope-chart'
         });
 
         // 背景
         svg.appendChild(this._el('circle', {
-            cx: this.cx, cy: this.cy, r: this.R.outerSign,
+            cx: this.cx, cy: this.cy, r: this.R.outerSign + pad,
             fill: this.colors.bg, stroke: 'none'
         }));
 
@@ -146,7 +147,6 @@ class ChartRenderer {
         this._drawZodiacWheel(svg, asc);
         this._drawDegreeMarks(svg, asc);
         this._drawHouseCusps(svg, houses, asc);
-        this._drawHouseNumbers(svg, houses, asc);
 
         // アスペクトライン
         if (chartData.aspects) {
@@ -223,16 +223,17 @@ class ChartRenderer {
             const midAngle = this._degToAngle(signStart + 15, asc);
             const glyphPos = this._polarToXY(midAngle, (this.R.outerSign + this.R.innerSign) / 2);
             const signGroup = this._el('g', {
-                transform: `translate(${glyphPos.x}, ${glyphPos.y}) scale(0.95)`,
+                transform: `translate(${glyphPos.x}, ${glyphPos.y}) scale(1.4)`,
                 'pointer-events': 'none'
             });
             signGroup.appendChild(this._el('path', {
                 d: this.signPaths[i],
                 fill: 'none',
                 stroke: this.colors.gold,
-                'stroke-width': '1.3',
+                'stroke-width': '1.2',
                 'stroke-linecap': 'round',
-                'stroke-linejoin': 'round'
+                'stroke-linejoin': 'round',
+                opacity: '0.9'
             }));
             svg.appendChild(signGroup);
         }
