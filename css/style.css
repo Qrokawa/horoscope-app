@@ -2261,6 +2261,10 @@ img {
 }
 
 .synastry-score {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.1em;
   margin-bottom: var(--space-md);
 }
 
@@ -2274,8 +2278,10 @@ img {
 }
 
 .score-label {
-  font-size: 1.2rem;
-  color: var(--text-secondary);
+  font-family: var(--font-display);
+  font-size: 2rem;
+  color: var(--gold);
+  font-weight: 300;
 }
 
 .synastry-level {
