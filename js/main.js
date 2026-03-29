@@ -107,11 +107,11 @@
         var hourSelect = document.getElementById('birth-hour');
         if (hourSelect) {
             var unknownOpt = document.createElement('option');
-            unknownOpt.value = '12'; unknownOpt.textContent = '不明（12:00で計算）';
+            unknownOpt.value = '12'; unknownOpt.textContent = '不明（12時で計算）';
             hourSelect.appendChild(unknownOpt);
             for (var h = 0; h <= 23; h++) {
                 var opt = document.createElement('option');
-                opt.value = h; opt.textContent = String(h).padStart(2, '0') + ':00';
+                opt.value = h; opt.textContent = h + '時';
                 hourSelect.appendChild(opt);
             }
         }
