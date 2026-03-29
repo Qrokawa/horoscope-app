@@ -576,6 +576,11 @@
             return;
         }
 
+        var loadingEl = document.getElementById('synastry-loading');
+        var resultEl = document.getElementById('synastry-result');
+        if (loadingEl) { loadingEl.style.display = 'block'; }
+        if (resultEl) { resultEl.style.display = 'none'; }
+
         try {
             var synEngine = new SynastryEngine(sweEngine);
             var person1 = currentChart.birthData;
@@ -589,8 +594,15 @@
             person1.timezone = person1.timezone || currentChart.birthData.timezone;
 
             currentSynastry = await synEngine.analyze(person1, person2);
+
+            // ハートアニメーションを最低2秒表示
+            await new Promise(function(resolve) { setTimeout(resolve, 2000); });
+
+            if (loadingEl) { loadingEl.style.display = 'none'; }
+            if (resultEl) { resultEl.style.display = 'block'; }
             displaySynastryResult();
         } catch (error) {
+            if (loadingEl) { loadingEl.style.display = 'none'; }
             console.error('Synastry error:', error);
             alert('相性診断中にエラーが発生しました。');
         }

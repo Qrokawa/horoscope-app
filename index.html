@@ -43,9 +43,9 @@
                 <div class="section-divider"></div>
             </header>
 
-            <!-- Swiss Ephemeris Wasm読み込み（非表示、バックグラウンドで完了） -->
-            <div id="swe-loading-indicator" style="display: none;">
-                <span id="swe-status"></span>
+            <!-- Swiss Ephemeris Wasm読み込みインジケーター -->
+            <div id="swe-loading-indicator" style="text-align:center; padding: 8px 0; font-size: 0.85em; color: rgba(255,255,255,0.6); display: none;">
+                <span id="swe-status">天文計算エンジンを準備中...</span>
             </div>
 
             <div class="glass-card form-card">
@@ -322,6 +322,21 @@
                     </div>
                     <button type="submit" class="btn-primary">相性を診断する</button>
                 </form>
+            </div>
+
+            <!-- 相性ローディング -->
+            <div id="synastry-loading" class="synastry-loading" style="display:none;">
+                <div class="synastry-loading-inner">
+                    <div class="heart-container">
+                        <div class="heart heart-1"></div>
+                        <div class="heart heart-2"></div>
+                        <div class="heart heart-3"></div>
+                        <div class="heart heart-4"></div>
+                        <div class="heart heart-5"></div>
+                        <div class="heart-main"></div>
+                    </div>
+                    <p class="synastry-loading-text">星の相性を読み解いています...</p>
+                </div>
             </div>
 
             <!-- 相性結果 -->
