@@ -617,7 +617,8 @@
         var html = '';
 
         html += '<div class="synastry-score-section glass-card">';
-        html += '<div class="synastry-score"><span class="score-number">' + s.overallScore.score + '</span><span class="score-label">/ 100</span></div>';
+        html += '<h3 class="synastry-score-title">ふたりの星が示す相性</h3>';
+        html += '<div class="synastry-score"><span class="score-number">' + s.overallScore.score + '</span><span class="score-label">%</span></div>';
         html += '<div class="synastry-level">' + s.overallScore.description + '</div>';
         html += '</div>';
 

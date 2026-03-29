@@ -2245,6 +2245,15 @@ img {
 }
 
 /* Synastry Score */
+.synastry-score-title {
+  font-family: var(--font-serif);
+  color: var(--gold);
+  font-size: 1.1rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  margin-bottom: var(--space-md);
+}
+
 .synastry-score-section {
   text-align: center;
   padding: var(--space-xl);
